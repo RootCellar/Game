@@ -28,6 +28,9 @@ public class Terminal extends JFrame implements KeyListener {
         this.add(panel);
         this.setTitle("Terminal");
         this.pack();
+        for(int i=0; i<100; i++) {
+            write("\n");
+        }
         this.setVisible(true);
     }
 
@@ -45,7 +48,7 @@ public class Terminal extends JFrame implements KeyListener {
                 input.setText("");
             }
         }catch(Exception e) {
-
+            input.setText("");
         }
     }
 

@@ -58,7 +58,7 @@ public class Client implements InputUser,Runnable {
                 s2.start();
                 //s.notServer();
                 System.out.println("Waiting for port...");
-                while(s.getPort()==0) {
+                while(s.getPort()<1) {
                     try{
                         Thread.sleep(100);
                     }catch(Exception e) {

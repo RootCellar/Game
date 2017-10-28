@@ -7,12 +7,10 @@ public class ServerSocketHandler implements Runnable
     private boolean setup;
     private boolean done;
     private boolean finished;
-    private int threshold=20;
     private int port;
-    private int waitTime=0;
-    private ArrayList<SocketHandler> connections;
+    private int waitTime=100;
     private Server server;
-    public ServerSocketHandler(Server s) {
+    public ServerSocketHandler(Server s) throws Exception {
         server=s;
         setup();
     }
@@ -21,7 +19,15 @@ public class ServerSocketHandler implements Runnable
         return socket;
     }
 
-    public void setup() {
+    public String getAddress() {
+        try{
+            return socket.getInetAddress().getLocalHost()+":"+port;
+        }catch(Exception e) {
+            return "";
+        }
+    }
+
+    public void setup() throws Exception{
         setup=false;
         done=true;
         port=-1;
@@ -32,16 +38,12 @@ public class ServerSocketHandler implements Runnable
                 setup=true;
                 port=i;
                 startThread();
-                break;
+                return;
             }catch(Exception e) {
                 socket=null;
             }
         }
-        try{
-            server.out("Server Socket listening on "+socket.getInetAddress().getLocalHost()+":"+port);
-        }catch(Exception e) {
-
-        }
+        throw new Exception("Could not find a valid port");
     }
 
     public int getPort() {
@@ -54,18 +56,6 @@ public class ServerSocketHandler implements Runnable
 
     public boolean isDone() {
         return done;
-    }
-
-    public SocketHandler getNext() {
-        return connections.remove(0);
-    }
-
-    public boolean hasNext() {
-        return connections.size()>0;
-    }
-
-    public void setThreshold(int x) {
-        threshold=x;
     }
 
     public void setTimeout(int x) throws SocketException {
@@ -88,12 +78,12 @@ public class ServerSocketHandler implements Runnable
             try{
                 client=socket.accept();
                 new DataOutputStream(client.getOutputStream()).writeUTF("Connection Accepted.");
-                if(connections.size()<threshold) {
-                    new DataOutputStream(client.getOutputStream()).writeUTF("Entering join list...");
-                    connections.add(new SocketHandler(client));
+                if(!server.listIsFull()) {
+                    new DataOutputStream(client.getOutputStream()).writeUTF("Joining Server...");
+                    server.addUser(new SocketHandler(client));
                 }
                 else {
-                    new DataOutputStream(client.getOutputStream()).writeUTF("Sorry, the list has reached it's threshold. Disconnecting...");
+                    new DataOutputStream(client.getOutputStream()).writeUTF("Sorry, the server is full. Disconnecting...");
                     client.close();
                 }
             }catch(Exception e) {

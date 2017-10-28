@@ -4,7 +4,7 @@ public class Server implements Runnable,InputUser
     private ServerSocketHandler connectHandler;
     private Terminal term;
     private boolean usingTerm=false;
-    private ArrayList<Player> players=new ArrayList<Player>();;
+    private ArrayList<Player> players=new ArrayList<Player>();
     private int maxPlayers=50;
     private boolean going;
     public static void main(String args[]) {
@@ -20,15 +20,34 @@ public class Server implements Runnable,InputUser
     public void stop() {
         going=false;
     }
+    
+    public boolean listIsFull() {
+        return players.size()>=maxPlayers;
+    }
+    
+    public void addUser(SocketHandler s) {
+        Player p = new Player(s);
+        MenuProtocol m = new MenuProtocol();
+        m.setUser(p);
+        p.setProtocol(m);
+        players.add(p);
+    }
 
     public void run() {
-        connectHandler= new ServerSocketHandler(this);
+        out("Starting server...");
         try{
-            connectHandler.setTimeout(1);
+            connectHandler= new ServerSocketHandler(this);
+        }catch(Exception e) {
+            out(e.getStackTrace()+"");
+            return;
+        }
+        try{
+            connectHandler.setTimeout(0);
         }catch(Exception e) {
 
         }
         connectHandler.setWaitTime(100);
+        out("Server is being hosted on "+getAddress());
         going=true;
         while(going) {
             try{
@@ -36,9 +55,7 @@ public class Server implements Runnable,InputUser
             }catch(Exception e) {
 
             }
-            if(players.size()<maxPlayers) {
-
-            }
+            
         }
     }
 

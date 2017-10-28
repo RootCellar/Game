@@ -8,10 +8,25 @@ public class SocketHandler implements Runnable
     private static boolean globalGoing=true;
     private Socket client;
     private InputUser user;
+    private Thread thread;
     public SocketHandler(Socket s) {
         client=s;
-        new Thread(this).start();
+        connected=true;
+        thread=new Thread(this);
+        thread.start();
         going=true;
+    }
+    
+    public void check() {
+        thread.interrupt();
+    }
+    
+    public boolean isGoing() {
+        return going;
+    }
+    
+    public boolean isConnected() {
+        return connected;
     }
     
     public void setUser(InputUser i) {
@@ -33,7 +48,6 @@ public class SocketHandler implements Runnable
     }
 
     public void run() {
-        connected=true;
         DataInputStream in=null;
         try{
             in = new DataInputStream(client.getInputStream());
@@ -47,7 +61,10 @@ public class SocketHandler implements Runnable
 
             }
             try{
-                user.inputText(in.readUTF());
+                String s = in.readUTF();
+                if(going && globalGoing) {
+                    user.inputText(s);
+                }
             }catch(IOException e) {
                 connected=false;
                 going=false;
