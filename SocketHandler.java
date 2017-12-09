@@ -4,8 +4,9 @@ public class SocketHandler implements Runnable
 {
     private static int waitTime=100;
     private boolean going;
-    private boolean connected;
+    private boolean connected=true;
     private static boolean globalGoing=true;
+    private static int maxMessageLength=500;
     private Socket client;
     private InputUser user;
     private Thread thread;
@@ -15,6 +16,10 @@ public class SocketHandler implements Runnable
         thread=new Thread(this);
         thread.start();
         going=true;
+    }
+    
+    public String getAddress() {
+        return client.getRemoteSocketAddress().toString();
     }
     
     public void check() {
@@ -63,6 +68,10 @@ public class SocketHandler implements Runnable
             try{
                 String s = in.readUTF();
                 if(going && globalGoing) {
+                    if(s.length()>maxMessageLength) {
+                        send("That message is too long");
+                        return;
+                    }
                     user.inputText(s);
                 }
             }catch(IOException e) {
@@ -83,5 +92,9 @@ public class SocketHandler implements Runnable
 
     public static void setGoing(boolean b) {
         globalGoing=b;
+    }
+    
+    public static void setMaxMessageLength(int i) {
+        maxMessageLength=i;
     }
 }
