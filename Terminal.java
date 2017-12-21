@@ -45,6 +45,7 @@ public class Terminal extends JFrame implements KeyListener {
             if(key.equals("Enter")) {
                 //Client.send(input.getText());
                 user.inputText(input.getText());
+                write("> "+input.getText());
                 input.setText("");
             }
         }catch(Exception e) {

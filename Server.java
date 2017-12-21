@@ -13,6 +13,7 @@ public class Server implements Runnable,InputUser
     private boolean mmon = true;
     private MatchMaker mm = new MatchMaker(this);
     private int tps = 0;
+    private Logger logger = new Logger();
     public static void main(String args[]) {
         Server s = new Server();
         s.openTerm();
@@ -122,6 +123,8 @@ public class Server implements Runnable,InputUser
             Users.get(i).disconnect();
         }
         removeUnconnected();
+
+        logger.close();
         
         out("Server Closed");
     }
@@ -139,6 +142,8 @@ public class Server implements Runnable,InputUser
         if(i.equals("/help")) {
             out("/halt - halt the server");
             out("/mmon - turn the match maker on and off");
+            out("/stop - stop the server");
+            
         }
         else if(i.equals("/stop")) {
             stop();
@@ -153,6 +158,7 @@ public class Server implements Runnable,InputUser
             out("MatchMaker on: "+mmon);
         }
         else sendAll(i);
+        logger.log("SERVER ADMIN: "+i);
     }
 
     public void sendAll(User u, String s) {
@@ -173,6 +179,7 @@ public class Server implements Runnable,InputUser
         if(usingTerm) {
             term.write(o+"\n");
         }
+        logger.log(o);
     }
 
     public void openTerm() {

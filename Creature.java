@@ -12,8 +12,12 @@ public class Creature
     }
     
     public void calcStats() {
-        mhp=100*Math.pow(level,1.1);
-        atk=30*Math.pow(level,1.1);
-        def=30*Math.pow(level,1.1);
+        mhp=10*Math.pow(level,1.1);
+        atk=10*Math.pow(level,1.1);
+        def=10*Math.pow(level,1.1);
+    }
+    
+    public String toString() {
+        return "Level "+level+" Hp: "+hp+"/"+mhp+"( "+((hp/mhp)*100)+"% )";
     }
 }

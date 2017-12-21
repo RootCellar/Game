@@ -28,6 +28,7 @@ public class MatchMaker
                 users.add(u);
                 u.send("Added to matchmaker");
             }
+            else u.send("Can't enter MatchMaker: MatchMaker is full");
         }catch(Exception e) {
 
         }

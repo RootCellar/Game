@@ -89,6 +89,7 @@ public class ServerSocketHandler implements Runnable
             }catch(Exception e) {
 
             }
+            
             try{
                 Thread.sleep(waitTime);
             }catch(Exception e) {

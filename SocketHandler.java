@@ -78,7 +78,7 @@ public class SocketHandler implements Runnable
                 connected=false;
                 going=false;
             }catch(Exception e) {
-                
+                e.printStackTrace();
             }
 
         }
