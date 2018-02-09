@@ -6,10 +6,19 @@ public class Logger
     private FileWriter toLog;
     public boolean canWrite=true;
     public Logger() {
+        //open();
+    }
+    
+    public void reopen() {
+        close();
+        open();
+    }
+    
+    public void open() {
         new File("Logs").mkdir();
         f = new File( "Logs/" + getNameByDate( new Date() ) + ".txt" );
         try{
-            toLog = new FileWriter(f);
+            toLog = new FileWriter(f,true);
         }catch(Exception e) {
             canWrite=false;
         }
@@ -35,10 +44,25 @@ public class Logger
     }
 
     public static String getNameByDate(Date date) {
-        return date.getMonth()+"-"+date.getDate()+"-"+(date.getYear()+1900);
+        return (date.getMonth()+1)+"-"+date.getDate()+"-"+(date.getYear()+1900);
     }
 
     public static String getTimeAsString(Date date) {
-        return date.getMonth()+"/"+date.getDate()+"/"+(date.getYear()+1900)+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
+        String ind = "AM";
+        int h = date.getHours();
+        if(h>12) {
+            h-=12;
+            ind= "PM";
+        }
+        
+        int m2 = date.getMinutes();
+        String m = m2+"";
+        if(m2<10) m="0"+m2;
+        
+        int s2 = date.getSeconds();
+        String s = s2+"";
+        if(s2<10) s="0"+s2;
+        
+        return (date.getMonth()+1)+"/"+date.getDate()+"/"+(date.getYear()+1900)+" "+h+":"+m+":"+s+" "+ind;
     }
 }

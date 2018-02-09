@@ -26,8 +26,7 @@ public class Match
         turn=one;
         one.setHandler(new UserGameHandler(o,this));
         two.setHandler(new UserGameHandler(t,this));
-        one.send("Game Started!");
-        two.send("Game Started!");
+        sendBoth("Game Started!");
         turn.send("This game will start off with your turn");
     }
 
@@ -44,10 +43,12 @@ public class Match
     }
 
     private void resetUsers() {
-        JoinMenu m = new JoinMenu();
+        one.playing(false);
+        two.playing(false);
+        MainMenu m = new MainMenu();
         m.setUser(one);
         one.setHandler(m);
-        m = new JoinMenu();
+        m = new MainMenu();
         m.setUser(two);
         two.setHandler(m);
     }
@@ -82,6 +83,11 @@ public class Match
     }
 
     public void inputText(User u, String s) {
+        if(u.getServer().isHalted()) {
+            u.send("Server is halted, command rejected");
+            return;
+        }
+        
         User other = getOtherUser(u);
         ArrayList<Creature> users = getCreatures(u);
         ArrayList<Creature> others = getOtherCreatures(u);
@@ -98,7 +104,7 @@ public class Match
 
         if(Command.is("/say",s)) {
             u.send("You say \""+s.substring(5)+"\"");
-            other.send("Your opponent says \""+s.substring(5)+"\"");
+            other.send("Your opponent, "+u.getName()+", says \""+s.substring(5)+"\"");
             return;
         }
 
@@ -126,6 +132,7 @@ public class Match
         }
 
         if(s.equals("/quit")) {
+            other.send("Your opponent has quit.");
             end();
             return;
         }

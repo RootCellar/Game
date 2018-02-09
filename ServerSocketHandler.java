@@ -6,13 +6,17 @@ public class ServerSocketHandler implements Runnable
     private ServerSocket socket;
     private boolean setup;
     private boolean done;
-    private boolean finished;
+    private boolean finished=true;
     private int port;
     private int waitTime=100;
     private Server server;
-    public ServerSocketHandler(Server s) throws Exception {
+    public ServerSocketHandler(Server s) {
         server=s;
-        setup();
+        //setup();
+    }
+
+    public boolean isFinished() {
+        return finished;
     }
 
     public ServerSocket getSocket() {
@@ -28,8 +32,12 @@ public class ServerSocketHandler implements Runnable
     }
 
     public void setup() throws Exception{
+        if(!finished) {
+            return;
+        }
+        finished=false;
         setup=false;
-        done=true;
+        done=false;
         port=-1;
         socket=null;
         for(int i=10000; i<65535; i++) {
@@ -43,6 +51,7 @@ public class ServerSocketHandler implements Runnable
                 socket=null;
             }
         }
+        finished=true;
         throw new Exception("Could not find a valid port");
     }
 
@@ -77,19 +86,21 @@ public class ServerSocketHandler implements Runnable
         while(!done) {
             try{
                 client=socket.accept();
-                new DataOutputStream(client.getOutputStream()).writeUTF("Connection Accepted.");
-                if(!server.listIsFull()) {
-                    new DataOutputStream(client.getOutputStream()).writeUTF("Joining Server...");
-                    server.addUser(new SocketHandler(client));
-                }
-                else {
-                    new DataOutputStream(client.getOutputStream()).writeUTF("Sorry, the server is full. Disconnecting...");
-                    client.close();
+                if(client!=null) {
+                    new DataOutputStream(client.getOutputStream()).writeUTF("Connection Accepted.");
+                    if(!server.listIsFull()) {
+                        new DataOutputStream(client.getOutputStream()).writeUTF("Joining Server...");
+                        server.addUser(new SocketHandler(client));
+                    }
+                    else {
+                        new DataOutputStream(client.getOutputStream()).writeUTF("Sorry, the server is full. Disconnecting...");
+                        client.close();
+                    }
                 }
             }catch(Exception e) {
 
             }
-            
+
             try{
                 Thread.sleep(waitTime);
             }catch(Exception e) {
@@ -99,8 +110,18 @@ public class ServerSocketHandler implements Runnable
         done=true;
         finished=true;
     }
+    
+    public void close() {
+        try{
+            socket.close();
+            port=-1;
+        }catch(Exception e) {
+            
+        }
+    }
 
     public void stop() {
+        close();
         done=true;
     }
 }

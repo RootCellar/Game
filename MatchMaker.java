@@ -7,17 +7,30 @@ public class MatchMaker
     public MatchMaker(Server s) {
         server = s;
     }
+    
+    public int getQueueSize() {
+        return users.size();
+    }
 
     public void run() {
         try{
+            clearUnneeded();
             if(users.size()>=2) {
-                server.addMatch(new Match(users.get(0), users.get(1) ) );
+                //server.addMatch(new Match(users.get(0), users.get(1) ) );
                 users.remove(0);
                 users.remove(0);
                 server.out("Created a match!");
             }
         }catch(Exception e) {
             e.printStackTrace();
+        }
+    }
+    
+    public void clearUnneeded() {
+        for(int i=0; i<users.size(); i++) {
+            if(!users.get(i).isConnected()) {
+                users.remove(i);
+            }
         }
     }
 

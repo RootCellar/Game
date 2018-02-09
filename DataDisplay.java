@@ -11,7 +11,7 @@ public class DataDisplay extends JFrame implements ActionListener {
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         labels = new JLabel[n];
         JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(10,10));
+        panel.setLayout(new GridLayout(20,10));
         panel.setBorder(BorderFactory.createEmptyBorder(20,30,10,30));
 
         //Text Fields for numbers

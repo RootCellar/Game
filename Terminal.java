@@ -42,14 +42,17 @@ public class Terminal extends JFrame implements KeyListener {
         try{
             String key = KeyEvent.getKeyText(event.getKeyCode());
             //System.out.println(key);
-            if(key.equals("Enter")) {
+            if(key.equals("Enter") && input.getText().length()>0) {
                 //Client.send(input.getText());
-                user.inputText(input.getText());
                 write("> "+input.getText());
+                String s = input.getText();
+                input.setText(new String());
+                user.inputText(s);
                 input.setText("");
             }
         }catch(Exception e) {
             input.setText("");
+            //e.printStackTrace();
         }
     }
 

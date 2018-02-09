@@ -6,6 +6,9 @@ public class Client implements InputUser,Runnable {
     private Socket server=null;
     private Terminal term;
     private boolean connected=false;
+    private Game game = new Game();
+    DataOutputStream dos;
+    ObjectOutputStream oos;
     public static void main(String args[]) {
         new Thread(new Client()).start();
     }
@@ -17,8 +20,10 @@ public class Client implements InputUser,Runnable {
         term = new Terminal();
         term.setUser(this);
         term.setVisible(false);
+        game.stop();
         Scanner in2 = new Scanner(System.in);
         while(true) {
+            game.stop();
             term.setVisible(false);
             String in="";
             String addr="";
@@ -36,7 +41,10 @@ public class Client implements InputUser,Runnable {
                 try{
                     System.out.println("Trying to connect to the server...");
                     server = new Socket(addr,Integer.parseInt(port));
+                    dos = new DataOutputStream(server.getOutputStream());
+                    oos = new ObjectOutputStream(dos);
                     System.out.println("Connected.");
+                    game.start();
                     //t2.start();
                     term.setVisible(true);
                     while(true) {
@@ -46,8 +54,11 @@ public class Client implements InputUser,Runnable {
                     }
                 }catch(IOException e) {
                     System.out.println("\n\nCan't connect to server");
+                    game.stop();
                 }catch(Exception e) {
-                    System.out.println("Couldn't launch server");
+                    System.out.println("Exception Thrown");
+                    e.printStackTrace();
+                    game.stop();
                 }
             }
             if(in.equals("h")) {
@@ -67,7 +78,10 @@ public class Client implements InputUser,Runnable {
                 try{
                     System.out.println("Trying to connect to the server...");
                     server = new Socket("localhost",s.getPort());
+                    dos = new DataOutputStream(server.getOutputStream());
+                    oos = new ObjectOutputStream(dos);
                     System.out.println("Connected.");
+                    game.start();
                     term.setVisible(true);
                     term.write("Connected.");
                     //t2.start();
@@ -78,8 +92,12 @@ public class Client implements InputUser,Runnable {
                     }
                 }catch(IOException e) {
                     System.out.println("\n\nCan't connect to server");
+                    game.stop();
                     s.inputText("/stop");
-                }   
+                }catch(Exception e) {
+                    System.out.println("Exception thrown");
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -87,15 +105,24 @@ public class Client implements InputUser,Runnable {
     public void inputText(String i) {
         send(i);
     }
+    
+    public void inputObject(Object o) {
+        
+    }
 
     public void send(String m) {
         if(server==null) {
             return;
         }
         try{
-            new DataOutputStream(server.getOutputStream()).writeUTF(m);
+            MessagePacket mp = new MessagePacket();
+            mp.setMessage(m);
+            oos.writeObject(mp);
         }catch(IOException e) {
             System.out.println("Failed to send message to server");
+        }catch(Exception e) {
+            e.printStackTrace();
         }
+        
     }
 }

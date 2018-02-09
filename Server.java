@@ -6,41 +6,40 @@ public class Server implements Runnable,InputUser
     private DataDisplay disp;
     private boolean usingTerm = false;
     private ArrayList<User> Users = new ArrayList<User>();
-    private ArrayList<Match> matches = new ArrayList<Match>();
     private int maxUsers = 50;
     private boolean going = false;
     private boolean halted = false;
     private boolean mmon = true;
-    private MatchMaker mm = new MatchMaker(this);
     private int tps = 0;
+    private double tickTime = 0;
     private Logger logger = new Logger();
+    private boolean debug = false;
+    private int dispLabelCount = 13;
+    private int totalBytesSent = 0;
+    private long startTime = System.nanoTime();
+    private int targetTps = 20;
+    
     public static void main(String args[]) {
         Server s = new Server();
+        if(args.length>0) {
+            if(args[0].equals("debug")) {
+                s.inputText("/debug");
+            }
+        }
         s.openTerm();
         s.start();
     }
-
-    public void endMatches() {
-        for(int i=0; i<matches.size(); i++) {
-            if(matches.get(i).going==false) {
-                matches.remove(i);
-            }
+    
+    public void calcTotalBytesSent() {
+        totalBytesSent = 0;
+        for(int i=0; i<Users.size(); i++) {
+            SocketHandler s = Users.get(i).getSocketHandler();
+            totalBytesSent+=s.getSize();
         }
     }
-
-    public void endAllMatches() {
-        for(int i=0; i<matches.size(); i++) {
-            matches.get(i).end();
-            matches.remove(i);
-        }
-    }
-
-    public void addMatch(Match m) {
-        matches.add(m);
-    }
-
-    public void putInMatchMaker(User u) {
-        mm.addUser(u);
+    
+    public boolean isHalted() {
+        return halted;
     }
 
     public void start() {
@@ -61,63 +60,110 @@ public class Server implements Runnable,InputUser
 
     public void addUser(SocketHandler s) {
         User p = new User(s,this);
-        JoinMenu m = new JoinMenu();
+        MainMenu m = new MainMenu();
         m.setUser(p);
         p.setHandler(m);
         Users.add(p);
         out("New User Connected from "+s.getAddress());
     }
-
-    public void run() {
-        out("Starting server...");
-        try{
-            long time1 = System.nanoTime();
-            connectHandler= new ServerSocketHandler(this);
-            out("Took "+((double)(System.nanoTime()-time1)/1000000000)+" Seconds to start server socket handler.");
-        }catch(Exception e) {
-            out(e.getStackTrace()+"");
+    
+    public int getUserCount() {
+        return Users.size();
+    }
+    
+    public void startSocketHandler() {
+        if(!connectHandler.isFinished()) {
+            out("Could not start server socket handler: It's already started!");
             return;
         }
         try{
-            connectHandler.setTimeout(0);
+            long time2 = System.nanoTime();
+            connectHandler.setup();
+            debug("Took "+((double)(System.nanoTime()-time2)/1000000000)+" Seconds to start the server socket handler.");
+            connectHandler.setTimeout(1);
+            connectHandler.setWaitTime(100);
         }catch(Exception e) {
-
+            out("Could not start server socket handler");
+            debug(e.getStackTrace()+"");
+            return;
         }
-        connectHandler.setWaitTime(100);
+    }
+    
+    public void createSocketHandler() {
+        try{
+            connectHandler = new ServerSocketHandler(this);
+        }catch(Exception e) {
+            out("Could not create ServerSocketHandler");
+            debug(e.getStackTrace()+"");
+        }
+    }
+
+    public void run() {
+        logger.open();
+        out("Starting server...");
+        long time1 = System.nanoTime();
+        
+        createSocketHandler();
+        
+        startSocketHandler();
+        
         out("Server is being hosted on "+getAddress());
         going=true;
-        long time1=System.nanoTime();
+        debug("Took "+((double)(System.nanoTime()-time1)/1000000000)+" Seconds to start the server.");
+        time1=System.nanoTime();
         int tps2=0;
         while(going) {
+            long tickStart = System.nanoTime();
             try{
-                if(!halted) Thread.sleep(1000 / 10);
+                //if(!halted) Thread.sleep(0);
+                if(!halted) Thread.sleep(1000 / targetTps);
                 else Thread.sleep(1000 / 1);
             }catch(Exception e) {
 
             }
+            
+            tickStart = System.nanoTime();
+            
+            //System.gc();
+            
             removeUnconnected();
             if(usingTerm) {
-                disp.setText(0,"Users: "+Users.size());
-                disp.setText(1,"Host Address: "+getAddress());
-                disp.setText(2,"TPS: "+tps);
-                disp.setText(3, "Halted: "+halted);
+                disp.setText(0, "Users: " + Users.size() );
+                disp.setText(1, "Host Address: " + getAddress() );
+                disp.setText(2, "TPS: " + tps );
+                disp.setText(3, "Halted: " + halted );
+                disp.setText(4, "Tick Time: " + tickTime + " ms" );
+                //disp.setText(5, "Matches: " + matches.size() );
+                //disp.setText(6, "Players in MatchMaker: "+ mm.getQueueSize() );
+                disp.setText(7, "Bytes Sent: " + totalBytesSent );
+                disp.setText(8, "Free Mem: " + Runtime.getRuntime().freeMemory() );
+                disp.setText(9, "Total Mem: " + Runtime.getRuntime().totalMemory() );
+                disp.setText(10, "Used Mem: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() ) );
+                disp.setText(11, "Used %: " + (100 * (double)(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()) / (double)Runtime.getRuntime().totalMemory()));
+                disp.setText(12, "Uptime: "+( (double) ( System.nanoTime() - startTime ) / 1000000000.0 ) + "s");
             }
 
             if(mmon && !halted) {
-                mm.run();
-                endMatches();
+                //mm.run();
+                //endMatches();
             }
+            
+            if(!logger.canWrite) logger.reopen();
 
+            tickTime = ( ( System.nanoTime() - (double)tickStart ) ) / 1000000;
+            
             tps2++;
             if(System.nanoTime() - time1 >= 1000000000) {
                 tps=tps2;
                 time1=System.nanoTime();
                 tps2=0;
+                calcTotalBytesSent();
             }
         }
         out("Closing Server...");
-        endAllMatches();
-        endMatches();
+        sendAll("SERVER","Closing Server...");
+        //endAllMatches();
+        //endMatches();
         connectHandler.stop();
         for(int i=0; i<Users.size(); i++) {
             Users.get(i).disconnect();
@@ -126,6 +172,8 @@ public class Server implements Runnable,InputUser
 
         logger.close();
         
+        closeTerm();
+        
         out("Server Closed");
     }
 
@@ -133,32 +181,72 @@ public class Server implements Runnable,InputUser
         for(int i=0; i<Users.size(); i++) {
             SocketHandler p = Users.get(i).getSocketHandler();
             if(p.isConnected()==false) {
+                out("Removing a user: "+Users.get(i).getName());
                 Users.remove(i);
+                
             }
         }
     }
+    
+    public void inputObject(Object o) {
+        
+    }
 
     public void inputText(String i) {
+        logger.log("SERVER ADMIN: "+i);
         if(i.equals("/help")) {
             out("/halt - halt the server");
             out("/mmon - turn the match maker on and off");
             out("/stop - stop the server");
-            
+            out("/debug - enable debug mode");
+            out("/open - open server socket, if it is not already open");
+            out("/close - close server socket, stop accepting connections");
+            out("/ttps <int> - set target tps for server");
         }
         else if(i.equals("/stop")) {
             stop();
         }
         else if(i.equals("/halt")) {
             halted=!halted;
-            if(halted) out("Server activity halted!");
-            else out("Server activity no longer halted");
+            if(halted) {
+                out("Server activity halted!");
+                sendAll("SERVER","Server activity halted!");
+            }
+            else {
+                out("Server activity no longer halted");
+                sendAll("SERVER","Server activity no longer halted");
+            }
         }
         else if(i.equals("/mmon")) {
             mmon=!mmon;
             out("MatchMaker on: "+mmon);
+            if(mmon) sendAll("SERVER","MatchMaker Enabled");
+            else sendAll("SERVER","MatchMaker Disabled");
         }
-        else sendAll(i);
-        logger.log("SERVER ADMIN: "+i);
+        else if(i.equals("/debug")) {
+            debug=!debug;
+            debug(debug+"");
+        }
+        else if(i.equals("/close")) {
+            out("Stopping server socket handler...");
+            connectHandler.stop();
+        }
+        else if(i.equals("/open")) {
+            out("Opening server socket handler...");
+            startSocketHandler();
+        }
+        else if(Command.is("/ttps",i)) {
+            int x;
+            try{
+                x = Integer.parseInt( Command.getArgs(i).get(1));
+            }catch(Exception e) {
+                out("Please enter an integer!");
+                return;
+            }
+            targetTps=x;
+            out("Target tps set to "+x);
+        }
+        else sendAll("SERVER ADMIN",i);
     }
 
     public void sendAll(User u, String s) {
@@ -169,15 +257,28 @@ public class Server implements Runnable,InputUser
     }
 
     public void sendAll(String s) {
-        out("[SERVER] "+s);
+        //out("[SERVER] "+s);
+        out(s);
         for(int i=0; i<Users.size(); i++) {
-            Users.get(i).send("[SERVER] "+s);
+            //Users.get(i).send("[SERVER] "+s);
+            Users.get(i).send(s);
+        }
+    }
+    
+    public void sendAll(String t, String m) {
+        //out("["+t+"] "+m);
+        sendAll("["+t+"] "+m);
+    }
+    
+    public void debug(String o) {
+        if(debug) {
+            out("[DEBUG] "+o);
         }
     }
 
     public void out(String o) {
         if(usingTerm) {
-            term.write(o+"\n");
+            term.write(o);
         }
         logger.log(o);
     }
@@ -186,7 +287,7 @@ public class Server implements Runnable,InputUser
         term=new Terminal();
         term.setUser(this);
         term.setTitle("Server Terminal");
-        disp = new DataDisplay(10);
+        disp = new DataDisplay(dispLabelCount);
         usingTerm=true;
     }
 

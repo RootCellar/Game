@@ -2,12 +2,16 @@ public class User
 {
     private String name="GUEST";
     private SocketHandler handler;
-    private UserHandler menu;
+    private Menu menu;
     private Server server;
     private boolean playing=false;
     public User(SocketHandler h, Server s) {
         handler=h;
         server=s;
+    }
+    
+    public boolean isConnected() {
+        return handler.isConnected();
     }
     
     public String getAddress() {
@@ -34,7 +38,7 @@ public class User
         return handler;
     }
 
-    public void setHandler(UserHandler m) {
+    public void setHandler(Menu m) {
         menu=m;
         handler.setUser(m);
     }

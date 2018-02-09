@@ -1,4 +1,4 @@
-public class UserGameHandler extends UserHandler
+public class UserGameHandler extends Menu implements UserHandler
 {
     private User user;
     private Match match;
@@ -10,5 +10,9 @@ public class UserGameHandler extends UserHandler
 
     public void inputText(String s) {
         match.inputText(user,s);
+    }
+    
+    public void inputObject(Object o) {
+        
     }
 }
