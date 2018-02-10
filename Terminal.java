@@ -38,6 +38,9 @@ public class Terminal extends JFrame implements KeyListener {
         user=u;
     }
 
+    /**
+     * Used to send the input and clear the text field when the user presses Enter
+     */
     public void keyPressed(KeyEvent event) {
         try{
             String key = KeyEvent.getKeyText(event.getKeyCode());
@@ -56,10 +59,13 @@ public class Terminal extends JFrame implements KeyListener {
         }
     }
 
+    /**
+     * Writes a message to the terminal
+     */
     public void write(String w) {
         text.append(w+"\n");
         try{
-            if(text.getDocument().getLength()>10000) {
+            if(text.getDocument().getLength()>10000) { //Prevents the terminal from having more than 10,000 characters to display
                 String text2=text.getDocument().getText(0, text.getDocument().getLength());
                 String text3=text2.substring( text2.length()-logLength, text2.length() );
                 text.setText(text3);

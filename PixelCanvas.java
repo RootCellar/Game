@@ -1,3 +1,9 @@
+/**
+ * Screen class
+ * Rendering is done by accessing the pixel array of the displayed image
+ * 
+ */
+
 import java.awt.*;
 import java.awt.image.*;
 import javax.swing.JFrame;
@@ -19,6 +25,9 @@ public class PixelCanvas extends Canvas implements Runnable
     int frames = 0;
     int fps = 0;
 
+    /**
+     * Sets the size of the window
+     */
     public void setSize(int w, int h) {
         frame.setMinimumSize( new Dimension( w , h ) );
         frame.setMaximumSize( new Dimension( w , h ) );
@@ -38,6 +47,9 @@ public class PixelCanvas extends Canvas implements Runnable
         going=false;
     }
 
+    /**
+     * This method can be used to render the screen at the desired frame rate
+     */
     public void run() {
         going = true;
         long time = System.nanoTime();
@@ -60,6 +72,9 @@ public class PixelCanvas extends Canvas implements Runnable
         going=false;
     }
 
+    /**
+     * Renders and find fps
+     */
     public void draw() {
         long time1 = System.nanoTime();
         render();
@@ -73,12 +88,18 @@ public class PixelCanvas extends Canvas implements Runnable
         //fps = Math.random();
     }   
 
+    /**
+     * Draws fps debug info on the screen
+     */
     public void drawFps(Graphics g) {
         g.setColor(Color.RED);
         g.drawString("PFPS: "+Pfps,10,10);
         g.drawString("FPS: "+fps,10,20);
     }
 
+    /**
+     * Draws the image on the screen
+     */
     public void render() {
         bs = getBufferStrategy();
         if (bs == null) {
@@ -101,6 +122,9 @@ public class PixelCanvas extends Canvas implements Runnable
         frames++;
     }
 
+    /**
+     * Clears the image, making it entirely black
+     */
     public void clear() {
         for(int y=0; y< HEIGHT; y++) {
             for(int x=0; x < WIDTH; x++) {
@@ -109,6 +133,9 @@ public class PixelCanvas extends Canvas implements Runnable
         }
     }
 
+    /**
+     * Set the pixel in the desired location to the desired color
+     */
     public void setPixel(int x, int y, int r, int g, int b) {
         try{
             int i = x + y * WIDTH;
@@ -118,6 +145,9 @@ public class PixelCanvas extends Canvas implements Runnable
         }
     }
 
+    /**
+     * Used to find the number that represents the desired amount of red, green, and blue
+     */
     public static int getColor(int r, int g, int b) {
         int r2=r<<16;
         int g2=g<<8;
@@ -137,6 +167,9 @@ public class PixelCanvas extends Canvas implements Runnable
         }
     }
 
+    /**
+     * Sets each pixel to a random color
+     */
     public void randomize() {
         for(int y=0; y< HEIGHT; y++) {
             for(int x=0; x < WIDTH; x++) {

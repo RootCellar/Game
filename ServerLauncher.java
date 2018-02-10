@@ -4,6 +4,11 @@ public class ServerLauncher implements InputUser
     private ArrayList<Server> servers= new ArrayList<Server>();
     private Terminal term = new Terminal();
     boolean going = true;
+    
+    /**
+     * Launch n servers
+     * Their guis will be closed
+     */
     public void launch(int n) {
         term.setUser(this);
         if(servers.size()>0) {
@@ -23,6 +28,9 @@ public class ServerLauncher implements InputUser
         }.start();
     }
 
+    /**
+     * Handles display
+     */
     public void monitor() {
         term.write("Making display...");
         DataDisplay d = new DataDisplay(servers.size());
@@ -39,6 +47,9 @@ public class ServerLauncher implements InputUser
         }
     }
     
+    /**
+     * Allows user to input commands
+     */
     public void inputText(String i) {
         if(i.equals("/stop")) {
             term.write("Stopping Servers...");

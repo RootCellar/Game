@@ -1,3 +1,7 @@
+/**
+ * This class receives input from the game window
+ */
+
 import java.util.ArrayList;
 import java.awt.event.*;
 public class InputListener implements KeyListener

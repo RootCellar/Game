@@ -14,6 +14,9 @@ public class User
         return handler.isConnected();
     }
     
+    /**
+     * Returns the ip address of a user
+     */
     public String getAddress() {
         return handler.getAddress();
     }
@@ -30,6 +33,9 @@ public class User
         return server;
     }
     
+    /**
+     * Disconnects a user
+     */
     public void disconnect() {
         handler.close();
     }
@@ -47,6 +53,9 @@ public class User
         return menu;
     }
 
+    /**
+     * Sends a message to the user
+     */
     public void send(String s) {
         try{
             handler.send(s);
@@ -59,6 +68,9 @@ public class User
         return name;   
     }
 
+    /**
+     * Sets a user's username/nickname
+     */
     public void setName(String s) {
         name=s;   
     }

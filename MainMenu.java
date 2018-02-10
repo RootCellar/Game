@@ -1,3 +1,7 @@
+/**
+ * The handler for users after they join the server
+ */
+
 public class MainMenu extends Menu implements UserHandler
 {
     //User user;

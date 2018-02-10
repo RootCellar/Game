@@ -42,6 +42,9 @@ public class Game implements Runnable
         //screen.setVisible(false);
     }
 
+    /**
+     * Thread for running the game
+     */
     public void run() {
         long unprocessed = 0;
         long timeSinceLast=System.nanoTime();
@@ -50,12 +53,12 @@ public class Game implements Runnable
         int time = 1000000000 / targetTps;
         
         
-        while(going) {
+        while(going) { //Loops and ticks the game
             try{
                 Thread.sleep(1);
                 unprocessed += ( System.nanoTime() - timeSinceLast);
                 timeSinceLast = System.nanoTime();
-                while(unprocessed>=time) {
+                while(unprocessed>=time) { //Makes sure that the game is always caught up
                     tick();
                     unprocessed -= time;
                 }
@@ -68,7 +71,7 @@ public class Game implements Runnable
         going=false;
     }
 
-    public void tick() {
+    public void tick() { //Ticks the game
         try{
             //Thread.sleep(10);
             if(input.down.down) y=y+1;

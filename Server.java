@@ -1,3 +1,7 @@
+/**
+ * Main Server Class
+ */
+
 import java.util.ArrayList;
 public class Server implements Runnable,InputUser
 {
@@ -50,6 +54,9 @@ public class Server implements Runnable,InputUser
         maxUsers=x;
     }
 
+    /**
+     * Stops the server thread and shuts down the server
+     */
     public void stop() {
         going=false;
     }
@@ -58,19 +65,27 @@ public class Server implements Runnable,InputUser
         return Users.size()>=maxUsers;
     }
 
+    /**
+     * Sets up a user that connected to the server
+     */
     public void addUser(SocketHandler s) {
         User p = new User(s,this);
         MainMenu m = new MainMenu();
         m.setUser(p);
         p.setHandler(m);
         Users.add(p);
-        out("New User Connected from "+s.getAddress());
+        out("New User Joined From "+s.getAddress());
     }
     
     public int getUserCount() {
         return Users.size();
     }
     
+    /**
+     * Starts the server socket handler.
+     * If the server is in debug mode, this method will also output the time
+     * it took to open the server socket handler.
+     */
     public void startSocketHandler() {
         if(!connectHandler.isFinished()) {
             out("Could not start server socket handler: It's already started!");
@@ -98,8 +113,11 @@ public class Server implements Runnable,InputUser
         }
     }
 
+    /**
+     * Method containing setup and main server loop
+     */
     public void run() {
-        logger.open();
+        logger.open(); // opens a file for logging server output
         out("Starting server...");
         long time1 = System.nanoTime();
         
@@ -113,11 +131,13 @@ public class Server implements Runnable,InputUser
         time1=System.nanoTime();
         int tps2=0;
         while(going) {
+            
             long tickStart = System.nanoTime();
-            try{
+            
+            try{ // Waits to make the server run at the desired ticks per second
                 //if(!halted) Thread.sleep(0);
                 if(!halted) Thread.sleep(1000 / targetTps);
-                else Thread.sleep(1000 / 1);
+                else Thread.sleep(1000 / 1); //Makes server slow to 1 tps when halted
             }catch(Exception e) {
 
             }
@@ -127,7 +147,8 @@ public class Server implements Runnable,InputUser
             //System.gc();
             
             removeUnconnected();
-            if(usingTerm) {
+            
+            if(usingTerm) { //Give the server statistics to the display GUI
                 disp.setText(0, "Users: " + Users.size() );
                 disp.setText(1, "Host Address: " + getAddress() );
                 disp.setText(2, "TPS: " + tps );
@@ -148,26 +169,29 @@ public class Server implements Runnable,InputUser
                 //endMatches();
             }
             
-            if(!logger.canWrite) logger.reopen();
+            if(!logger.canWrite) logger.reopen(); //Reopens log file if it is currently not open/working
 
             tickTime = ( ( System.nanoTime() - (double)tickStart ) ) / 1000000;
             
             tps2++;
-            if(System.nanoTime() - time1 >= 1000000000) {
+            if(System.nanoTime() - time1 >= 1000000000) { //Tracks server tps
                 tps=tps2;
                 time1=System.nanoTime();
                 tps2=0;
                 calcTotalBytesSent();
             }
         }
+        //Code to close the server when main loop is done
         out("Closing Server...");
         sendAll("SERVER","Closing Server...");
         //endAllMatches();
         //endMatches();
         connectHandler.stop();
+        
         for(int i=0; i<Users.size(); i++) {
             Users.get(i).disconnect();
         }
+        
         removeUnconnected();
 
         logger.close();
@@ -177,6 +201,9 @@ public class Server implements Runnable,InputUser
         out("Server Closed");
     }
 
+    /**
+     * Find users that are no longer connected and remove them from the user list
+     */
     public void removeUnconnected() {
         for(int i=0; i<Users.size(); i++) {
             SocketHandler p = Users.get(i).getSocketHandler();
@@ -192,6 +219,9 @@ public class Server implements Runnable,InputUser
         
     }
 
+    /**
+     * Method to handle server commands
+     */
     public void inputText(String i) {
         logger.log("SERVER ADMIN: "+i);
         if(i.equals("/help")) {
@@ -206,7 +236,7 @@ public class Server implements Runnable,InputUser
         else if(i.equals("/stop")) {
             stop();
         }
-        else if(i.equals("/halt")) {
+        else if(i.equals("/halt")) { //halt the server, if there is intensive activity
             halted=!halted;
             if(halted) {
                 out("Server activity halted!");
@@ -223,19 +253,19 @@ public class Server implements Runnable,InputUser
             if(mmon) sendAll("SERVER","MatchMaker Enabled");
             else sendAll("SERVER","MatchMaker Disabled");
         }
-        else if(i.equals("/debug")) {
+        else if(i.equals("/debug")) { //enable/disable debug mode
             debug=!debug;
             debug(debug+"");
         }
-        else if(i.equals("/close")) {
+        else if(i.equals("/close")) { //close server socket handler
             out("Stopping server socket handler...");
             connectHandler.stop();
         }
-        else if(i.equals("/open")) {
+        else if(i.equals("/open")) { //open server socket handler
             out("Opening server socket handler...");
             startSocketHandler();
         }
-        else if(Command.is("/ttps",i)) {
+        else if(Command.is("/ttps",i)) { //Set desired ticks per second
             int x;
             try{
                 x = Integer.parseInt( Command.getArgs(i).get(1));
@@ -246,9 +276,12 @@ public class Server implements Runnable,InputUser
             targetTps=x;
             out("Target tps set to "+x);
         }
-        else sendAll("SERVER ADMIN",i);
+        else sendAll("SERVER ADMIN",i); //Send a message to all connected users
     }
 
+    /**
+     * Used when users send messages
+     */
     public void sendAll(User u, String s) {
         out("["+u.getName()+"] "+s);
         for(int i=0; i<Users.size(); i++) {
@@ -256,6 +289,9 @@ public class Server implements Runnable,InputUser
         }
     }
 
+    /**
+     * Sends the desired message to everyone, and outputs it to the server terminal
+     */
     public void sendAll(String s) {
         //out("[SERVER] "+s);
         out(s);
@@ -265,17 +301,26 @@ public class Server implements Runnable,InputUser
         }
     }
     
+    /**
+     * Send a message to everyone, but with a title
+     */
     public void sendAll(String t, String m) {
         //out("["+t+"] "+m);
         sendAll("["+t+"] "+m);
     }
     
+    /**
+     * Writes debug output if debug mode is enabled
+     */
     public void debug(String o) {
         if(debug) {
             out("[DEBUG] "+o);
         }
     }
 
+    /**
+     * Writes output to server terminal and to logs.
+     */
     public void out(String o) {
         if(usingTerm) {
             term.write(o);
@@ -283,6 +328,9 @@ public class Server implements Runnable,InputUser
         logger.log(o);
     }
 
+    /**
+     * Opens terminal and data gui
+     */
     public void openTerm() {
         term=new Terminal();
         term.setUser(this);
@@ -291,6 +339,9 @@ public class Server implements Runnable,InputUser
         usingTerm=true;
     }
 
+    /**
+     * Close terminal and gui
+     */
     public void closeTerm() {
         term.setVisible(false);
         disp.setVisible(false);

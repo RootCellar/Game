@@ -9,11 +9,18 @@ public class Logger
         //open();
     }
     
+    /**
+     * Close and reopen the log file
+     */
     public void reopen() {
         close();
         open();
     }
     
+    /**
+     * Opens a log file
+     * The name of the file is the current date
+     */
     public void open() {
         new File("Logs").mkdir();
         f = new File( "Logs/" + getNameByDate( new Date() ) + ".txt" );
@@ -33,6 +40,9 @@ public class Logger
         }
     }
 
+    /**
+     * Logs a message and writes a new line
+     */
     public void log(String s) {
         try{
             toLog.write(getTimeAsString( new Date() )+" "+s);

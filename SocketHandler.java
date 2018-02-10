@@ -1,3 +1,8 @@
+/**
+ * This class receives messages from a user and sends them to 
+ * the object that handles the user's messages
+ */
+
 import java.net.*;
 import java.io.*;
 public class SocketHandler implements Runnable
@@ -5,7 +10,7 @@ public class SocketHandler implements Runnable
     private static int waitTime=100;
     private boolean going;
     private boolean connected=true;
-    private static boolean globalGoing=true;
+    private static boolean globalGoing=true; //Can be used to shut down all socket handlers at the same time
     private static int maxMessageLength=100;
     private Socket client;
     private InputUser user;
@@ -52,6 +57,9 @@ public class SocketHandler implements Runnable
         send.writeUTF(s);
     }
 
+    /**
+     * Disconnect the user
+     */
     public void close() {
         try{
             client.close();
@@ -62,6 +70,9 @@ public class SocketHandler implements Runnable
         connected=false;
     }
 
+    /**
+     * Method that loops and receives messages from the user
+     */
     public void run() {
         DataInputStream in=null;
         ObjectInputStream in2=null;

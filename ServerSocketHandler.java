@@ -1,3 +1,9 @@
+/**
+ * This class is used to accept client connections,
+ * and add the clients to the server.
+ */
+
+
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
@@ -7,7 +13,7 @@ public class ServerSocketHandler implements Runnable
     private boolean setup;
     private boolean done;
     private boolean finished=true;
-    private int port;
+    private int port=-1;
     private int waitTime=100;
     private Server server;
     public ServerSocketHandler(Server s) {
@@ -23,6 +29,9 @@ public class ServerSocketHandler implements Runnable
         return socket;
     }
 
+    /**
+     * Return IP Address of server
+     */
     public String getAddress() {
         try{
             return socket.getInetAddress().getLocalHost()+":"+port;
@@ -31,6 +40,10 @@ public class ServerSocketHandler implements Runnable
         }
     }
 
+    /**
+     * Sets up the server socket handler and starts it,
+     * if it isn't already running.
+     */
     public void setup() throws Exception{
         if(!finished) {
             return;
@@ -40,7 +53,7 @@ public class ServerSocketHandler implements Runnable
         done=false;
         port=-1;
         socket=null;
-        for(int i=10000; i<65535; i++) {
+        for(int i=10000; i<65535; i++) { //Find an available port, and bind a socket to it
             try{
                 socket = new ServerSocket(i);
                 setup=true;
@@ -80,13 +93,17 @@ public class ServerSocketHandler implements Runnable
         waitTime=x;
     }
 
+    /**
+     * Wait for clients to connect, and put them into the server
+     */
     public void run() {
         Socket client;
         finished=false;
         while(!done) {
             try{
-                client=socket.accept();
+                client=socket.accept(); //Accept client connection
                 if(client!=null) {
+                    server.out("New User Connected From " + client.getRemoteSocketAddress().toString() );
                     new DataOutputStream(client.getOutputStream()).writeUTF("Connection Accepted.");
                     if(!server.listIsFull()) {
                         new DataOutputStream(client.getOutputStream()).writeUTF("Joining Server...");
@@ -111,6 +128,11 @@ public class ServerSocketHandler implements Runnable
         finished=true;
     }
     
+    /**
+     * Closes the server socket 
+     * Server socket stops receiving new connections
+     * Does not shut down the thread
+     */
     public void close() {
         try{
             socket.close();
@@ -119,7 +141,10 @@ public class ServerSocketHandler implements Runnable
             
         }
     }
-
+    
+    /**
+     * Closes server socket and stops the thread
+     */
     public void stop() {
         close();
         done=true;
